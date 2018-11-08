@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.issmart.dao.RecommendedDao">
+	<select id="queryBoothInfo" resultType="Map">
+		SELECT booth_name as boothName,booth_description as boothDescription,
+		device_mac as deviceMac
+		FROM tb_booth_info
+		WHERE unit_id = #{unitId}
+		AND device_mac = #{deviceMac}
+	</select>
+	<select id="queryMemberInfo" resultType="Map">
+		SELECT m.member_name as memberName,
+		d.element_name as positionCode,
+		m.company_name as companyName,
+		m.wechat_head_img as wechatHeadImg,
+		m.beacon_code as beaconCode,
+		i.beacon_mac as beaconMac
+		FROM tb_member m
+		LEFT JOIN tb_dictionary d ON d.unit_id = m.unit_id AND m.postion_id = d.id
+		INNER JOIN tb_member_info i ON m.unit_id = i.unit_id AND i.beacon_id = m.beacon_code
+		WHERE m.unit_id = #{unitId}
+		AND i.beacon_mac = #{beaconMac}
+	</select>
+	<select id="queryBoothInfoByUnitId" resultType="Map">
+		SELECT booth_name as boothName,booth_description as boothDescription,
+		booth_id as boothId
+		FROM tb_booth_info
+		WHERE unit_id = #{unitId}
+	</select>
+</mapper>

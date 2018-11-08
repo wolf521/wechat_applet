@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.issmart.dao.ActiveDao">
+	<resultMap id="ActiveBaseResultMap" type="BeaconActive">
+		<id column="id" property="id" jdbcType="INTEGER" />
+		<result column="member_name" property="memberName" jdbcType="VARCHAR" />
+		<result column="member_email" property="memberEmail" jdbcType="VARCHAR" />
+		<result column="member_id" property="memberId" jdbcType="INTEGER" />
+		<result column="company_name" property="companyName" jdbcType="VARCHAR" />
+		<result column="activeFlag" property="activeFlag" jdbcType="VARCHAR" />
+		<result column="postion_code" property="postionCode" jdbcType="VARCHAR" />
+		<result column="beacon_mac" property="beaconMac" jdbcType="VARCHAR" />
+		<result column="device_mac" property="deviceMac" jdbcType="VARCHAR" />
+		<result column="booth_name" property="boothName" jdbcType="VARCHAR" />
+		<result column="arrive_time" property="arriveTime" jdbcType="VARCHAR" />
+		<result column="eventName" property="eventName" jdbcType="VARCHAR" />
+		<result column="leave_time" property="leaveTime" jdbcType="TIMESTAMP" />
+		<result column="stay_time" property="stayTime" jdbcType="INTEGER" />
+		<result column="unitId" property="unitId" jdbcType="INTEGER" />
+		<result column="wechatHeadImg" property="wechatHeadImg" jdbcType="VARCHAR" />
+		<result column="targetBeaconCode" property="targetBeaconCode" jdbcType="VARCHAR" />
+		<result column="targetBeaconMac" property="targetBeaconMac" jdbcType="VARCHAR" />
+	</resultMap>
+	<select id="getBeaconMac" resultType="String">
+		SELECT beacon_mac from tb_member_info
+		WHERE unit_id = #{unitId}
+		AND beacon_id = #{beaconCode}
+	</select>
+	<select id="queryActive" resultMap="ActiveBaseResultMap">
+		select DISTINCT log.device_mac,stay_time,leave_time,arrive_time,
+		b.booth_name,postion_code,company_name,log.unit as unitId
+		from
+		tb_visit_activity_log log
+		left join tb_member_info u on u.beacon_mac =
+		log.beacon_mac AND u.unit_id = log.unit
+		left join tb_booth_info b on
+		b.device_mac = log.device_mac AND b.unit_id = log.unit
+		Where log.unit = #{unitId}
+		and log.beacon_mac = #{beaconMac}
+		ORDER BY b.device_mac,arrive_time
+	</select>
+	<select id="queryBehaviorBtn" resultMap="ActiveBaseResultMap">
+		SELECT log.device_mac as deviceMac,log.unit_id as unitId, CONCAT(CONCAT('按一按获取',v.attribute_value),'的资料') as eventName,log.log_time as arrive_time,
+		log.log_time as leave_time,'0' as activeFlag
+		FROM tb_behavior_log log
+		INNER JOIN tb_behavior_value v ON log.id = v.behavior_log_id AND v.attribute_id = 2 
+		WHERE log.unit_id = #{unitId}
+		AND log.beacon_mac = #{beaconMac}
+		ORDER BY log.log_time
+	</select>
+	<select id="queryBehaviorCard" resultMap="ActiveBaseResultMap">
+		SELECT  CONCAT(CONCAT('通过贴一贴已与',v.attribute_value),'交换名片') as eventName,log.log_time as arrive_time,
+		log.log_time as leave_time,v1.attribute_value as targetBeaconMac,log.unit_id as unitId,
+		m.wechat_head_img as wechatHeadImg,m.beacon_code as targetBeaconCode,v.member_id,
+		m.member_email as member_email,m.company_name as company_name,'1' as activeFlag
+		FROM tb_behavior_log log
+		INNER JOIN tb_behavior_value v ON log.id = v.behavior_log_id AND v.attribute_id = 5
+		INNER JOIN tb_behavior_value v1 ON log.id = v1.behavior_log_id AND v1.attribute_id = 7
+		INNER JOIN tb_member_info info ON info.beacon_mac = v1.attribute_value AND log.unit_id = info.unit_id	
+		INNER JOIN tb_member m ON info.beacon_id = m.beacon_code AND m.unit_id = log.unit_id
+		WHERE log.unit_id = #{unitId}
+		AND log.beacon_mac = #{beaconMac}
+		ORDER BY log.log_time
+	</select>
+	<select id="queryBehaviorFriends" resultMap="ActiveBaseResultMap">
+		SELECT  case when validate = 0 and application = 0 THEN CONCAT(CONCAT('已向',m.member_name),'发送好友申请')
+				when validate = 1 and application = 0 THEN CONCAT(CONCAT('已添加',m.member_name),'为好友')
+				when validate = 1 and application = 1 THEN CONCAT(CONCAT('已通过',m.member_name),'的好友申请')
+				ELSE CONCAT(CONCAT('等待验证',m.member_name),'的好友申请') END as eventName,
+				case when validate = 0 and application = 0 THEN f.created_time
+				when validate = 0 and application = 1 THEN f.created_time
+				ELSE f.update_time END as arrive_time,
+				case when validate = 0 and application = 0 THEN f.created_time
+				when validate = 0 and application = 1 THEN f.created_time
+				ELSE f.update_time END as leave_time,
+				f.beacon_code_friends as targetBeaconCode,
+				m.wechat_head_img as wechatHeadImg,
+				'2' as activeFlag
+		FROM tb_member_friends f
+		INNER JOIN tb_member m ON f.beacon_code_friends = m.beacon_code AND m.unit_id = f.unit_id
+		WHERE f.unit_id = #{unitId}
+		AND f.beacon_code = #{beaconCode}
+		ORDER BY arrive_time
+	</select>
+</mapper>

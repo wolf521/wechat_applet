@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.issmart.dao.DictionaryDao">
+	<resultMap id="BaseResultMap" type="Dictionary">
+		<id column="id" property="id" jdbcType="INTEGER" />
+		<result column="unit_id" property="unitId" jdbcType="INTEGER" />
+		<result column="parent_id" property="parentId" jdbcType="INTEGER" />
+		<result column="element_name" property="elementName" jdbcType="VARCHAR" />
+		<result column="element_code" property="elementCode" jdbcType="VARCHAR" />
+		<result column="order_num" property="orderNum" jdbcType="INTEGER" />
+		<association property="elementList" select="queryElement"
+			column="id">
+		</association>
+	</resultMap>
+	<select id="queryDictionary" resultMap="BaseResultMap">
+		select
+		id,unit_id,parent_id,element_name,element_code,order_num
+		from tb_dictionary
+		Where unit_id = #{unitId}
+		and element_code = #{elementCode}
+		and enable = '1'
+	</select>
+	<select id="queryElement" resultType="Map">
+		select
+		id,unit_id as unitId,parent_id as parentId,element_name as elementName,
+		element_code as elementCode,order_num as orderNum
+		from tb_dictionary
+		Where parent_id = #{id}
+		and enable = '1'
+		Order by orderNum
+	</select>
+</mapper>

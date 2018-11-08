@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.issmart.dao.FriendsDao">
+
+	<select id="queryFriends" resultType="Map">
+		select
+		f.id,f.unit_id as unitId,f.beacon_code_friends as beaconCode,f.validate,f.application,
+		m.member_name as memberName,m.wechat_head_img as wechatHeadImg,m.company_name as companyName, 
+		d.element_name as postionCode,d1.element_name as industry
+		from tb_member_friends f
+		INNER join tb_member m on f.unit_id = m.unit_id and f.beacon_code_friends = m.beacon_code
+		left join tb_dictionary d on f.unit_id = d.unit_id and d.id = m.postion_id
+		left join tb_dictionary d1 on f.unit_id = d1.unit_id and d1.id = m.industry_id
+		Where f.unit_id = #{unitId}
+		and f.beacon_code = #{beaconCode}
+		and f.enable = '1'
+	</select>
+	
+	<insert id="insertsFriends">
+		INSERT INTO
+		tb_member_friends
+		(unit_id, beacon_code, beacon_code_friends,application)
+		VALUES
+		<foreach item="item" index="index" collection="list"
+			separator=",">
+			(#{unitId},#{item.beaconCode}, #{item.beaconCodeFriends}, #{item.application})
+		</foreach>
+	</insert>
+	
+	<update id="updateFriends">
+		UPDATE
+		tb_member_friends
+		<set>
+			<if test="validate != null and validate != ''">
+				validate = #{validate},
+			</if>
+			<if test="enable != null and enable != ''">
+				enable = #{enable},
+			</if>
+			<if test="true">
+				update_time = NOW()
+			</if>
+		</set>
+		WHERE unit_id = #{unitId}
+		and beacon_code = #{beaconCode}
+		and beacon_code_friends = #{beaconCodeFriends}
+	</update>
+	
+	<select id="queryFriendsFromCard" resultType="Map">
+		SELECT m.member_name as memberName,m.postion_code as postionCode,m.company_name as companyName,
+		m.member_phone as memberPhone,m.member_email as memberEmail,w.wechat_head_img_url as wechatHeadImgUrl,
+		is_visit as isVisit
+		FROM tb_cm_member_cards card
+		INNER JOIN tb_cm_member m ON card.member_card_id = m.id
+		LEFT JOIN tb_cm_member_wechat w ON card.member_card_id = w.member_id
+		WHERE card.member_id = #{memberId}
+		ORDER BY is_visit,card.created_time
+	</select>
+</mapper>

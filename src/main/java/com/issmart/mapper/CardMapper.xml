@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.issmart.dao.CardDao">
+	<select id="queryBeaconMacInfo" resultType="String">
+		SELECT beacon_mac FROM tr_em_event_device d
+		LEFT JOIN tb_bg_beacon_member_relation r ON d.event_id = r.event_id
+		WHERE d.unit_id = #{unitId}
+	</select>
+	<select id="queryMemberId" resultType="Integer">
+		SELECT member_id FROM tr_em_event_device d
+		INNER JOIN tb_bg_beacon_member_relation r ON d.event_id = r.event_id
+		WHERE d.unit_id = #{unitId}
+		AND r.beacon_mac = #{beaconMac}
+	</select>
+	<select id="queryCardsInfo" resultType="Map">
+		SELECT DISTINCT m.member_name as memberName,m.postion_code as postionCode,m.company_name as companyName,
+		m.member_phone as memberPhone,m.member_email as memberEmail,w.wechat_head_img_url as wechatHeadImgUrl,
+		is_visit as isVisit
+		FROM tb_bg_beacon_member_relation re
+		INNER JOIN tr_em_event_device de ON de.event_id = re.event_id
+		INNER JOIN tb_cm_member m ON re.member_id = m.id
+		INNER JOIN tb_cm_member_cards card ON re.member_id = card.member_card_id
+		LEFT JOIN tb_cm_member_wechat w ON re.member_id = w.member_id
+		WHERE de.unit_id = #{unitId}
+		AND re.beacon_mac in 
+		<foreach item="item" collection="beaconMacList" index="index" open="(" separator="," close=")">
+			#{item}
+		</foreach>
+		ORDER BY is_visit,card.created_time
+	</select>
+	<select id="queryMemberIdList" resultType="String" parameterType="java.util.List">
+		SELECT DISTINCT re.member_id FROM tr_em_event_device d
+		LEFT JOIN tb_bg_beacon_member_relation re ON d.event_id = re.event_id
+		WHERE d.unit_id = #{unitId}
+		AND re.member_id not in(
+		SELECT member_card_id FROM tb_cm_member_cards  
+		WHERE member_id = #{memberId})
+		AND re.beacon_mac in
+		<foreach item="item" collection="beaconMacList" index="index" open="(" separator="," close=")">
+			#{item}
+		</foreach>
+	</select>
+	<insert id="insertCardInfo">
+		insert into tb_cm_member_cards(member_id,member_card_id,is_visit) values
+		<foreach item="item" collection="memberIdList" index="index" separator=",">
+			(#{memberId},#{item},0)
+		</foreach>
+	</insert>
+</mapper>

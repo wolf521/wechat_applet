@@ -1,0 +1,186 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.issmart.dao.MemberDao">
+	<resultMap id="MemberBaseResultMap" type="Member">
+		<id column="id" property="id" jdbcType="INTEGER" />
+		<result column="unit_id" property="unitId" jdbcType="INTEGER" />
+		<result column="member_name" property="memberName" jdbcType="VARCHAR" />
+		<result column="member_email" property="memberEmail" jdbcType="VARCHAR" />
+		<result column="member_phone" property="memberPhone" jdbcType="VARCHAR" />
+		<result column="company_name" property="companyName" jdbcType="VARCHAR" />
+		<result column="postion_id" property="postionId" jdbcType="INTEGER" />
+		<result column="postionCode" property="postion" jdbcType="VARCHAR" />
+		<result column="industry_id" property="industryId" jdbcType="INTEGER" />
+		<result column="industry" property="industry" jdbcType="VARCHAR" />
+		<result column="wechat_head_img" property="wechatHeadImg"
+			jdbcType="VARCHAR" />
+		<result column="wechat_nickname" property="wechatNickname"
+			jdbcType="VARCHAR" />
+		<result column="beacon_mac" property="beaconMac" jdbcType="VARCHAR" />
+		<result column="beacon_code" property="beaconCode" jdbcType="VARCHAR" />
+		<result column="open_privacy" property="openPrivacy" jdbcType="VARCHAR" />
+		<result column="openId" property="openId" jdbcType="VARCHAR" />
+		<association property="memberLabelList" select="queryLabel"
+			column="id">
+		</association>
+		<association property="memberInterestList" select="queryInterest"
+			column="id">
+		</association>
+	</resultMap>
+	<resultMap id="LabelBaseResultMap" type="MemberLabel">
+		<id column="id" property="id" jdbcType="INTEGER" />
+		<result column="member_id" property="memberId" jdbcType="INTEGER" />
+		<result column="label_id" property="labelId" jdbcType="INTEGER" />
+		<result column="labelName" property="labelName" jdbcType="VARCHAR" />
+	</resultMap>
+	<resultMap id="InterestBaseResultMap" type="MemberInterest">
+		<id column="id" property="id" jdbcType="INTEGER" />
+		<result column="member_id" property="memberId" jdbcType="INTEGER" />
+		<result column="interest_id" property="interestId" jdbcType="INTEGER" />
+		<result column="interestName" property="interestName" jdbcType="VARCHAR" />
+	</resultMap>
+	<select id="queryMember" resultMap="MemberBaseResultMap">
+		select
+		m.id,m.unit_id,member_name,member_email,member_phone,company_name,
+		postion_id,d1.element_name as postionCode,industry_id,d2.element_name as industry,
+		wechat_head_img,wechat_nickname,beacon_mac,beacon_code,open_privacy,m.open_id as openId
+		from tb_member m
+		left join tb_dictionary d1 on d1.unit_id = m.unit_id and m.postion_id = d1.id
+		left join tb_dictionary d2 on d2.unit_id = m.unit_id and m.industry_id = d2.id
+		Where m.unit_id = #{unitId}
+		and beacon_code = #{beaconCode}
+		and m.enable = '1'
+	</select>
+	<select id="queryLabel" resultMap="LabelBaseResultMap">
+		select la.id,member_id,label_id,d.element_name as labelName
+		from tb_member_label la
+		left join tb_dictionary d on la.label_id = d.id
+		Where member_id = #{id}
+		and la.enable = '1'
+	</select>
+	<select id="queryInterest" resultMap="InterestBaseResultMap">
+		select la.id,member_id,interest_id,d.element_name as interestName
+		from tb_member_interest la
+		left join tb_dictionary d on la.interest_id = d.id
+		Where member_id = #{id}
+		and la.enable = '1'
+	</select>
+	<insert id="insertMember" useGeneratedKeys="true" keyProperty="memberId">
+		INSERT INTO tb_member
+		SET
+		<if test="unitId != null and unitId != ''">
+			unit_id = #{unitId},
+		</if>
+		<if test="memberName != null and memberName != ''">
+			member_name = #{memberName},
+		</if>
+		<if test="memberEmail != null and memberEmail != ''">
+			member_email = #{memberEmail},
+		</if>
+		<if test="memberPhone != null and memberPhone != ''">
+			member_phone = #{memberPhone},
+		</if>
+		<if test="companyName != null and companyName != ''">
+			company_name = #{companyName},
+		</if>
+		<if test="postionId != null and postionId != ''">
+			postion_id = #{postionId},
+		</if>
+		<if test="industryId != null and industryId != ''">
+			industry_id = #{industryId},
+		</if>
+		<if test="wechatHeadImg != null and wechatHeadImg != ''">
+			wechat_head_img = #{wechatHeadImg},
+		</if>
+		<if test="wechatNickname != null and wechatNickname != ''">
+			wechat_nickname = #{wechatNickname},
+		</if>
+		<if test="beaconMac != null and beaconMac != ''">
+			beacon_mac = #{beaconMac},
+		</if>
+		<if test="beaconCode != null and beaconCode != ''">
+			beacon_code = #{beaconCode},
+		</if>
+		<if test="openPrivacy != null and openPrivacy != ''">
+			open_privacy = #{openPrivacy},
+		</if>
+		<if test="openId != null and openId != ''">
+			open_id = #{openId}
+		</if>
+	</insert>
+	<update id="updateMember">
+		UPDATE tb_member
+		SET
+		<if test="unitId != null and unitId != ''">
+			unit_id = #{unitId},
+		</if>
+		<if test="memberName != null and memberName != ''">
+			member_name = #{memberName},
+		</if>
+		<if test="memberEmail != null and memberEmail != ''">
+			member_email = #{memberEmail},
+		</if>
+		<if test="memberPhone != null and memberPhone != ''">
+			member_phone = #{memberPhone},
+		</if>
+		<if test="companyName != null and companyName != ''">
+			company_name = #{companyName},
+		</if>
+		<if test="postionId != null and postionId != ''">
+			postion_id = #{postionId},
+		</if>
+		<if test="industryId != null and industryId != ''">
+			industry_id = #{industryId},
+		</if>
+		<if test="wechatHeadImg != null and wechatHeadImg != ''">
+			wechat_head_img = #{wechatHeadImg},
+		</if>
+		<if test="wechatNickname != null and wechatNickname != ''">
+			wechat_nickname = #{wechatNickname},
+		</if>
+		<if test="beaconMac != null and beaconMac != ''">
+			beacon_mac = #{beaconMac},
+		</if>
+		<if test="beaconCode != null and beaconCode != ''">
+			beacon_code = #{beaconCode},
+		</if>
+		<if test="openPrivacy != null and openPrivacy != ''">
+			open_privacy = #{openPrivacy},
+		</if>
+		<if test="true">
+			update_time = NOW()
+		</if>
+		where id = #{id}
+	</update>
+	<update id="deleteMemberLabel">
+		UPDATE tb_member_label
+		SET enable = '0',
+		update_time = NOW()
+		where member_id = #{memberId}
+	</update>
+	<insert id="insertMemberLabel">
+		INSERT INTO
+		tb_member_label
+		(member_id, label_id)
+		VALUES
+		<foreach item="item" index="index" collection="memberLabelList"
+			separator=",">
+			(#{memberId}, #{item.labelId})
+		</foreach>
+	</insert>
+	<update id="deleteMemberInterest">
+		UPDATE tb_member_interest
+		SET enable = '0',
+		update_time = NOW()
+		where member_id = #{memberId}
+	</update>
+	<insert id="insertMemberInterest">
+		INSERT INTO tb_member_interest
+		(member_id, interest_id)
+		VALUES
+		<foreach item="item" index="index" collection="memberInterestList"
+			separator=",">
+			(#{memberId}, #{item.interestId})
+		</foreach>
+	</insert>
+</mapper>

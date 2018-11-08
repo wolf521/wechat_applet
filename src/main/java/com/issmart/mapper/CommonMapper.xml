@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.issmart.dao.CommonDao">
+	<insert id="insertAccessToken">
+		insert into tb_wechat_info(appid,access_token,timestamp,created_time)
+		values(#{appId},#{accessToken},UNIX_TIMESTAMP(NOW()),NOW())
+	</insert>
+	<update id="updateAccessToken">
+		update tb_wechat_info
+		set access_token = #{accessToken},
+		timestamp = UNIX_TIMESTAMP(NOW())
+		where appid = #{appId}
+	</update>
+	<select id="queryAccessToken" resultType="String">
+		Select access_token FROM tb_wechat_info 
+		WHERE appid = #{appId}
+		and (UNIX_TIMESTAMP(NOW()) - `timestamp`) &lt;= 7200
+	</select>
+</mapper>
